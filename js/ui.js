@@ -94,6 +94,7 @@ EK.ui = (function () {
 
     var buttons = el("div", { class: "ek-actions" }, [
       el("button", { class: "ek-btn", onClick: function () { go("#study"); } }, ["Estudiar"]),
+      el("button", { class: "ek-btn ek-btn--blue", onClick: function () { go("#quiz"); } }, ["Examen"]),
       el("button", { class: "ek-btn ek-btn--blue", onClick: function () { go("#favorites"); } }, ["Favoritas"]),
       el("button", { class: "ek-btn ek-btn--muted", onClick: function () { go("#settings"); } }, ["Configuración"])
     ]);
@@ -207,11 +208,131 @@ EK.ui = (function () {
     ]));
   }
 
+  // ---- Examen ----
+  var _quizFb = null; // { i, correct, expected } feedback de la pregunta respondida
+
+  function renderQuizMenu() {
+    var r = clear();
+    var back = el("button", { class: "ek-back", onClick: function () { go("#home"); } }, ["← Inicio"]);
+    r.appendChild(el("div", { class: "ek-view" }, [
+      back,
+      el("h1", { class: "ek-title", text: "Examen" }),
+      el("p", { class: "ek-progress-text", text: "Elige una modalidad:" }),
+      el("div", { class: "ek-actions" }, [
+        el("button", { class: "ek-btn", onClick: function () { go("#quiz/choice"); } }, ["Opción múltiple"]),
+        el("button", { class: "ek-btn ek-btn--blue", onClick: function () { go("#quiz/write"); } }, ["Escribir"]),
+        el("button", { class: "ek-btn ek-btn--muted", onClick: function () { go("#quiz/listen"); } }, ["Escuchar"])
+      ])
+    ]));
+  }
+
+  function quizHeader() {
+    return el("div", { class: "ek-quiz__head" }, [
+      el("button", { class: "ek-back", onClick: function () { go("#quiz"); } }, ["← Examen"]),
+      el("span", { class: "ek-nav__count", text: (EK.quiz.index() + 1) + " / " + EK.quiz.total() + " · Aciertos: " + EK.quiz.score() })
+    ]);
+  }
+
+  function renderQuizResult() {
+    var r = clear();
+    var res = EK.quiz.result();
+    var m = EK.quiz.mode();
+    r.appendChild(el("div", { class: "ek-view" }, [
+      el("h1", { class: "ek-title", text: "Resultado" }),
+      el("div", { class: "ek-card ek-quiz__result" }, [
+        el("div", { class: "ek-quiz__score", text: res.score + " / " + res.total }),
+        el("div", { class: "ek-quiz__pct", text: res.percent + "%" })
+      ]),
+      el("div", { class: "ek-actions" }, [
+        el("button", { class: "ek-btn", onClick: function () { _quizFb = null; go("#quiz/" + m); } }, ["Reintentar"]),
+        el("button", { class: "ek-btn ek-btn--muted", onClick: function () { _quizFb = null; go("#home"); } }, ["Inicio"])
+      ])
+    ]));
+  }
+
+  function advanceQuiz() {
+    _quizFb = null;
+    if (EK.quiz.next() === null) { renderQuizResult(); }
+    else { renderQuizQuestion(); }
+  }
+
+  function renderQuizQuestion() {
+    var q = EK.quiz.current();
+    if (!q) { renderQuizMenu(); return; }
+    var r = clear();
+    var answered = _quizFb && _quizFb.i === EK.quiz.index();
+
+    var stimulus;
+    if (q.mode === "listen") {
+      stimulus = el("button", {
+        class: "ek-icon-btn ek-quiz__play", "aria-label": "Escuchar de nuevo",
+        onClick: function () { speakNormal(q.word.en); }
+      }, ["🔊"]);
+      if (!answered) speakNormal(q.word.en); // reproducir al mostrar
+    } else {
+      stimulus = el("h1", { class: "ek-word-en", text: q.prompt });
+    }
+
+    var body;
+    if (q.mode === "write") {
+      var input = el("input", {
+        class: "ek-search ek-quiz__input", type: "text", "aria-label": "Tu respuesta",
+        placeholder: "Escribe en español…", autocomplete: "off"
+      });
+      if (answered) { input.value = ""; input.setAttribute("disabled", "disabled"); }
+      var check = el("button", { class: "ek-btn", onClick: function () {
+        if (answered) return;
+        _quizFb = { i: EK.quiz.index() };
+        var res = EK.quiz.answer(input.value);
+        _quizFb.correct = res.correct; _quizFb.expected = res.expected;
+        renderQuizQuestion();
+      } }, ["Comprobar"]);
+      input.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); check.click(); } });
+      body = el("div", { class: "ek-quiz__write" }, [input, check]);
+    } else {
+      body = el("div", { class: "ek-quiz__options" }, q.options.map(function (opt, idx) {
+        var cls = "ek-opt";
+        if (answered) {
+          if (opt.correct) cls += " is-correct";
+          else if (_quizFb.chosen === idx) cls += " is-wrong";
+        }
+        return el("button", {
+          class: cls,
+          onClick: function () {
+            if (answered) return;
+            _quizFb = { i: EK.quiz.index(), chosen: idx };
+            var res = EK.quiz.answer(idx);
+            _quizFb.correct = res.correct; _quizFb.expected = res.expected;
+            renderQuizQuestion();
+          }
+        }, [opt.text]);
+      }));
+    }
+
+    var feedback = null;
+    if (answered) {
+      var okText = _quizFb.correct ? "¡Correcto! 🎉" : ("Respuesta: " + q.word.es.join(" / "));
+      feedback = el("div", { class: "ek-quiz__fb " + (_quizFb.correct ? "is-correct" : "is-wrong"), text: okText });
+    }
+
+    var nextBtn = answered
+      ? el("button", { class: "ek-btn ek-btn--blue", onClick: advanceQuiz },
+          [EK.quiz.index() >= EK.quiz.total() - 1 ? "Ver resultado" : "Siguiente"])
+      : null;
+
+    r.appendChild(el("div", { class: "ek-view" }, [
+      quizHeader(),
+      el("div", { class: "ek-card ek-quiz" }, [stimulus, body, feedback]),
+      nextBtn
+    ]));
+  }
+
   function render(route) {
     switch (route && route.view) {
       case "study": renderStudy(); break;
       case "favorites": renderFavorites(); break;
       case "settings": renderSettings(); break;
+      case "quiz": (route && route.seg) ? renderQuizQuestion() : renderQuizMenu(); break;
       default: renderHome();
     }
   }
@@ -224,6 +345,9 @@ EK.ui = (function () {
     renderHome: renderHome,
     renderStudy: renderStudy,
     renderFavorites: renderFavorites,
-    renderSettings: renderSettings
+    renderSettings: renderSettings,
+    renderQuizMenu: renderQuizMenu,
+    renderQuizQuestion: renderQuizQuestion,
+    renderQuizResult: renderQuizResult
   };
 })();

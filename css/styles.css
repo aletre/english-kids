@@ -164,3 +164,24 @@ body {
   background: var(--surface); color: var(--text);
 }
 .ek-seg.is-active { background: var(--color-green); border-color: var(--color-green); color: #fff; }
+
+/* ===== Fase 2: examen ===== */
+.ek-quiz { display: flex; flex-direction: column; gap: 16px; align-items: stretch; }
+.ek-quiz__head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.ek-quiz__play { align-self: center; font-size: 32px; }
+.ek-quiz__options { display: flex; flex-direction: column; gap: 10px; }
+.ek-opt {
+  min-height: var(--tap); padding: 0 18px; font: inherit; font-weight: 800;
+  border: 2px solid var(--border); border-radius: var(--radius);
+  background: var(--surface); color: var(--text); text-align: center;
+}
+.ek-opt.is-correct { background: var(--color-green); border-color: var(--color-green); color: #fff; }
+.ek-opt.is-wrong { background: #FF4B4B; border-color: #FF4B4B; color: #fff; }
+.ek-quiz__write { display: flex; flex-direction: column; gap: 10px; }
+.ek-quiz__input { text-align: center; }
+.ek-quiz__fb { text-align: center; font-weight: 800; padding: 8px; border-radius: var(--radius); }
+.ek-quiz__fb.is-correct { color: var(--color-green); }
+.ek-quiz__fb.is-wrong { color: #FF4B4B; }
+.ek-quiz__result { align-items: center; text-align: center; }
+.ek-quiz__score { font-size: 40px; font-weight: 800; }
+.ek-quiz__pct { font-size: 22px; color: var(--text-muted); }
