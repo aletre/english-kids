@@ -212,6 +212,7 @@ EK.ui = (function () {
   var _quizFb = null; // { i, correct, expected } feedback de la pregunta respondida
 
   function renderQuizMenu() {
+    _quizFb = null;
     var r = clear();
     var back = el("button", { class: "ek-back", onClick: function () { go("#home"); } }, ["← Inicio"]);
     r.appendChild(el("div", { class: "ek-view" }, [
@@ -348,6 +349,7 @@ EK.ui = (function () {
     renderSettings: renderSettings,
     renderQuizMenu: renderQuizMenu,
     renderQuizQuestion: renderQuizQuestion,
-    renderQuizResult: renderQuizResult
+    renderQuizResult: renderQuizResult,
+    resetQuizFb: function () { _quizFb = null; }
   };
 })();
