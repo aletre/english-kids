@@ -7,8 +7,9 @@ EK.app = (function () {
   function parseHash() {
     var h = (location.hash || "").replace(/^#\/?/, "");
     var parts = h.split("/");
-    var id = parts[1] != null && parts[1] !== "" ? parseInt(parts[1], 10) : null;
-    return { view: parts[0] || "home", id: isNaN(id) ? null : id };
+    var idNum = parts[1] != null && parts[1] !== "" ? parseInt(parts[1], 10) : null;
+    var seg = parts[1] != null && parts[1] !== "" ? parts[1] : null;
+    return { view: parts[0] || "home", id: isNaN(idNum) ? null : idNum, seg: seg };
   }
 
   function route() {
@@ -20,6 +21,9 @@ EK.app = (function () {
         var last = EK.storage.get("lastWordId");
         EK.study.start(EK.words, last != null ? last : EK.words[0].id);
       }
+    } else if (r.view === "quiz" && r.seg) {
+      EK.quiz.start(r.seg);
+      EK.ui.resetQuizFb();
     }
     EK.ui.render(r);
   }
