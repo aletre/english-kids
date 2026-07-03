@@ -1,0 +1,97 @@
+/* ===== Reset mínimo ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { -webkit-text-size-adjust: 100%; }
+img, svg { max-width: 100%; display: block; }
+button { font: inherit; cursor: pointer; }
+
+/* ===== Tokens de tema ===== */
+:root {
+  --color-green: #58CC02;
+  --color-blue: #1CB0F6;
+  --color-yellow: #FFD43B;
+
+  --bg: #FFFFFF;
+  --surface: #F7F7F7;
+  --surface-2: #EDEDED;
+  --text: #3C3C3C;
+  --text-muted: #777777;
+  --border: #E5E5E5;
+
+  --radius: 18px;
+  --radius-lg: 28px;
+  --shadow: 0 4px 0 rgba(0,0,0,0.08);
+  --space: 16px;
+  --font: "Nunito", "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+  --tap: 56px; /* área mínima táctil para botones grandes */
+}
+
+:root[data-theme="dark"] {
+  --bg: #131F24;
+  --surface: #1C2A31;
+  --surface-2: #26363D;
+  --text: #F1F7FB;
+  --text-muted: #9FB2BC;
+  --border: #2E4149;
+  --shadow: 0 4px 0 rgba(0,0,0,0.35);
+}
+
+/* ===== Base ===== */
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+  min-height: 100vh;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+#app {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: var(--space);
+}
+
+/* ===== Componentes base (usados por Fase 1) ===== */
+.ek-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--tap);
+  padding: 0 24px;
+  border: none;
+  border-radius: var(--radius);
+  background: var(--color-green);
+  color: #fff;
+  font-weight: 800;
+  box-shadow: var(--shadow);
+  transition: transform 0.05s ease, filter 0.15s ease;
+}
+.ek-btn:active { transform: translateY(2px); box-shadow: none; }
+.ek-btn--blue { background: var(--color-blue); }
+.ek-btn--muted { background: var(--surface-2); color: var(--text); }
+
+.ek-card {
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+  text-align: center;
+}
+
+.ek-progress {
+  height: 18px;
+  background: var(--surface-2);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.ek-progress__fill {
+  height: 100%;
+  background: var(--color-green);
+  width: 0%;
+  transition: width 0.3s ease;
+}
+
+/* ===== Responsive ===== */
+@media (min-width: 900px) {
+  #app { padding: 32px; }
+}
