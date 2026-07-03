@@ -282,7 +282,7 @@ EK.ui = (function () {
       });
       if (answered) { input.value = ""; input.setAttribute("disabled", "disabled"); }
       var check = el("button", { class: "ek-btn", onClick: function () {
-        if (answered) return;
+        if (answered || input.value.trim() === "") return;
         _quizFb = { i: EK.quiz.index() };
         var res = EK.quiz.answer(input.value);
         _quizFb.correct = res.correct; _quizFb.expected = res.expected;
