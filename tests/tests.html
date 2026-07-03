@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>English Kids — Tests</title>
+</head>
+<body>
+  <h1>English Kids — Tests</h1>
+  <div id="results" style="font-family: monospace; white-space: pre;"></div>
+
+  <!-- Módulos bajo prueba -->
+  <script src="../js/storage.js"></script>
+  <script src="../js/words.js"></script>
+
+  <!-- Arnés + suites -->
+  <script src="test-framework.js"></script>
+  <script src="storage.test.js"></script>
+  <script src="words.test.js"></script>
+
+  <script>
+    EKTest.run(document.getElementById("results"));
+  </script>
+</body>
+</html>
