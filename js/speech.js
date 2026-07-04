@@ -33,8 +33,9 @@ EK.speech = (function () {
     if (voice) { u.voice = voice; u.lang = voice.lang; }
     else { u.lang = preferredLang; }
     u.rate = typeof opts.rate === "number" ? opts.rate : 1;
-    synth.cancel(); // evita solapes
-    synth.speak(u);
+    synth.cancel();
+    // Retardo tras cancel(): evita que Chrome/Safari corten el inicio de la palabra.
+    setTimeout(function () { synth.speak(u); }, 90);
   }
 
   function speakSlow(text) {
@@ -45,10 +46,36 @@ EK.speech = (function () {
     return !!(window.SpeechRecognition || window.webkitSpeechRecognition);
   }
 
+  // Letras a deletrear (solo a-z, ignora espacios/signos).
+  function spellSequence(text) {
+    return String(text).split("").filter(function (ch) { return /[a-zA-Z]/.test(ch); });
+  }
+
+  // Deletrea la palabra: una locución por letra, lenta, con pausas naturales.
+  function spell(text) {
+    if (!isSupported()) return;
+    var letters = spellSequence(text);
+    if (!letters.length) return;
+    var preferredLang = (EK.storage && EK.storage.get("settings.lang")) || "en-US";
+    var voice = pickVoice(preferredLang);
+    synth.cancel();
+    setTimeout(function () {
+      letters.forEach(function (ch) {
+        var u = new window.SpeechSynthesisUtterance(ch);
+        if (voice) { u.voice = voice; u.lang = voice.lang; }
+        else { u.lang = preferredLang; }
+        u.rate = 0.6;
+        synth.speak(u); // se encolan → pausa natural entre letras
+      });
+    }, 90);
+  }
+
   return {
     isSupported: isSupported,
     speak: speak,
     speakSlow: speakSlow,
+    spell: spell,
+    spellSequence: spellSequence,
     isRecognitionSupported: isRecognitionSupported
   };
 })();
