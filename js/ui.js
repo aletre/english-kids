@@ -331,7 +331,7 @@ EK.ui = (function () {
   }
 
   // ---- Juego de memoria ----
-  var _memStart = 0, _memTimer = null, _memLocked = false;
+  var _memStart = 0, _memTimer = null, _memLocked = false, _memMismatchTO = null;
 
   function memElapsed() {
     return _memStart ? Math.floor((Date.now() - _memStart) / 1000) : 0;
@@ -339,6 +339,8 @@ EK.ui = (function () {
 
   function stopMemoryTimer() {
     if (_memTimer) { clearInterval(_memTimer); _memTimer = null; }
+    if (_memMismatchTO) { clearTimeout(_memMismatchTO); _memMismatchTO = null; }
+    _memLocked = false;
   }
 
   function startMemoryTimer() {
@@ -364,7 +366,8 @@ EK.ui = (function () {
     renderMemory();
     if (res.status === "mismatch") {
       _memLocked = true;
-      setTimeout(function () {
+      _memMismatchTO = setTimeout(function () {
+        _memMismatchTO = null;
         EK.memory.clearMismatch();
         _memLocked = false;
         renderMemory();
