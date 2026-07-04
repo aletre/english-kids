@@ -111,6 +111,21 @@ EK.ui = (function () {
     EK.speech.speak(text, { rate: EK.settings.rateFor(EK.settings.getSpeed()) });
   }
 
+  // Práctica de pronunciación: escucha al niño y compara con la palabra.
+  function onSpeechPractice(w) {
+    var statusEl = document.getElementById("ek-mic-status");
+    if (statusEl) statusEl.textContent = "🎤 Escuchando…";
+    EK.speech.recognize({
+      onResult: function (transcript) {
+        var okp = EK.speech.scorePronunciation(w.en, transcript);
+        if (statusEl) statusEl.textContent = (okp ? "✅ ¡Muy bien! " : "❌ Escuché: ") + transcript;
+      },
+      onError: function () {
+        if (statusEl) statusEl.textContent = "No te escuché, intenta de nuevo.";
+      }
+    });
+  }
+
   function renderStudy() {
     var r = clear();
     var w = EK.study.current();
@@ -126,11 +141,14 @@ EK.ui = (function () {
         el("button", { class: "ek-icon-btn", "aria-label": "Pronunciar", onClick: function () { speakNormal(w.en); } }, ["🔊"]),
         el("button", { class: "ek-icon-btn", "aria-label": "Pronunciación lenta", onClick: function () { EK.speech.speakSlow(w.en); } }, ["🐢"]),
         el("button", { class: "ek-icon-btn", "aria-label": "Deletrear", onClick: function () { EK.speech.spell(w.en); } }, ["🔤"]),
+        EK.speech.isRecognitionSupported()
+          ? el("button", { class: "ek-icon-btn", "aria-label": "Pronuncia tú", onClick: function () { onSpeechPractice(w); } }, ["🎤"])
+          : null,
         el("button", {
           class: "ek-icon-btn" + (fav ? " is-active" : ""), "aria-label": "Favorita",
           onClick: function () { EK.favorites.toggle(w.id); renderStudy(); }
         }, [fav ? "⭐" : "☆"])
-      ])
+      ].filter(Boolean))
     ]);
 
     var nav = el("div", { class: "ek-nav" }, [
@@ -141,7 +159,10 @@ EK.ui = (function () {
 
     var back = el("button", { class: "ek-back", onClick: function () { go("#home"); } }, ["← Inicio"]);
 
-    r.appendChild(el("div", { class: "ek-view" }, [back, card, nav]));
+    var micStatus = EK.speech.isRecognitionSupported()
+      ? el("p", { class: "ek-mic-status", id: "ek-mic-status", text: "" })
+      : null;
+    r.appendChild(el("div", { class: "ek-view" }, [back, card, micStatus, nav].filter(Boolean)));
   }
 
   // ---- Favoritas ----
