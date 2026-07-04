@@ -123,6 +123,7 @@ EK.ui = (function () {
       el("div", { class: "ek-study__controls" }, [
         el("button", { class: "ek-icon-btn", "aria-label": "Pronunciar", onClick: function () { speakNormal(w.en); } }, ["🔊"]),
         el("button", { class: "ek-icon-btn", "aria-label": "Pronunciación lenta", onClick: function () { EK.speech.speakSlow(w.en); } }, ["🐢"]),
+        el("button", { class: "ek-icon-btn", "aria-label": "Deletrear", onClick: function () { EK.speech.spell(w.en); } }, ["🔤"]),
         el("button", {
           class: "ek-icon-btn" + (fav ? " is-active" : ""), "aria-label": "Favorita",
           onClick: function () { EK.favorites.toggle(w.id); renderStudy(); }
