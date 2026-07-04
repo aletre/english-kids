@@ -222,3 +222,6 @@ body {
 .ek-ach__emoji { font-size: 40px; line-height: 1; }
 .ek-ach__label { font-weight: 800; font-size: 14px; }
 @media (min-width: 560px) { .ek-ach-grid { grid-template-columns: repeat(3, 1fr); } }
+
+/* ===== Fase 5: práctica de pronunciación ===== */
+.ek-mic-status { text-align: center; font-weight: 800; color: var(--text-muted); min-height: 1.4em; }
