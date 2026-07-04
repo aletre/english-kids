@@ -101,7 +101,7 @@ EK.ui = (function () {
     ]);
 
     r.appendChild(el("div", { class: "ek-home" }, [
-      logo, bar, progressText, searchInput, results, buttons
+      logo, bar, progressText, gamiStrip(), searchInput, results, buttons
     ]));
   }
 
@@ -411,6 +411,37 @@ EK.ui = (function () {
     r.appendChild(el("div", { class: "ek-view" }, children));
   }
 
+  // ---- Logros ----
+  function gamiStrip() {
+    var g = EK.gamification.summary();
+    var fill = el("div", { class: "ek-gami__fill" });
+    fill.style.width = g.percent + "%";
+    return el("button", { class: "ek-gami", "aria-label": "Ver logros", onClick: function () { go("#achievements"); } }, [
+      el("span", { class: "ek-gami__level", text: "Nivel " + g.level }),
+      el("div", { class: "ek-gami__bar" }, [fill]),
+      el("span", { class: "ek-gami__streak", text: "🔥 " + g.streak })
+    ]);
+  }
+
+  function renderAchievements() {
+    var r = clear();
+    var back = el("button", { class: "ek-back", onClick: function () { go("#home"); } }, ["← Inicio"]);
+    var g = EK.gamification.summary();
+    var head = el("div", { class: "ek-card ek-quiz__result" }, [
+      el("div", { class: "ek-quiz__score", text: "Nivel " + g.level }),
+      el("div", { class: "ek-quiz__pct", text: g.xp + " XP · 🔥 " + g.streak + " días" })
+    ]);
+    var grid = el("div", { class: "ek-ach-grid" }, EK.gamification.achievements().map(function (a) {
+      return el("div", { class: "ek-ach" + (a.unlocked ? " is-on" : "") }, [
+        el("div", { class: "ek-ach__emoji", text: a.emoji }),
+        el("div", { class: "ek-ach__label", text: a.label })
+      ]);
+    }));
+    r.appendChild(el("div", { class: "ek-view" }, [
+      back, el("h1", { class: "ek-title", text: "Logros" }), head, grid
+    ]));
+  }
+
   function render(route) {
     switch (route && route.view) {
       case "study": renderStudy(); break;
@@ -418,6 +449,7 @@ EK.ui = (function () {
       case "settings": renderSettings(); break;
       case "quiz": (route && route.seg) ? renderQuizQuestion() : renderQuizMenu(); break;
       case "memory": renderMemory(); break;
+      case "achievements": renderAchievements(); break;
       default: renderHome();
     }
   }
@@ -438,6 +470,7 @@ EK.ui = (function () {
     renderMemory: renderMemory,
     startMemory: startMemory,
     startMemoryTimer: startMemoryTimer,
-    stopMemoryTimer: stopMemoryTimer
+    stopMemoryTimer: stopMemoryTimer,
+    renderAchievements: renderAchievements
   };
 })();
