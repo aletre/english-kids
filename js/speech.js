@@ -70,12 +70,41 @@ EK.speech = (function () {
     }, 90);
   }
 
+  // Compara lo reconocido con la palabra objetivo (texto-a-texto, sin tildes/mayúsculas).
+  function scorePronunciation(target, transcript) {
+    var t = EK.wordUtils.normalize(target);
+    var s = EK.wordUtils.normalize(transcript);
+    if (t === "" || s === "") return false;
+    return s.indexOf(t) !== -1;
+  }
+
+  // Reconocimiento de voz (Web Speech API). No-op seguro si el navegador no lo soporta.
+  function recognize(opts) {
+    opts = opts || {};
+    var Rec = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!Rec) { if (opts.onError) opts.onError("unsupported"); return null; }
+    var rec = new Rec();
+    rec.lang = opts.lang || (EK.storage && EK.storage.get("settings.lang")) || "en-US";
+    rec.interimResults = false;
+    rec.maxAlternatives = 1;
+    rec.onresult = function (e) {
+      var transcript = e.results[0][0].transcript;
+      if (opts.onResult) opts.onResult(transcript);
+    };
+    rec.onerror = function (e) { if (opts.onError) opts.onError((e && e.error) || "error"); };
+    rec.onend = function () { if (opts.onEnd) opts.onEnd(); };
+    try { rec.start(); } catch (err) { if (opts.onError) opts.onError("start-failed"); }
+    return rec;
+  }
+
   return {
     isSupported: isSupported,
     speak: speak,
     speakSlow: speakSlow,
     spell: spell,
     spellSequence: spellSequence,
-    isRecognitionSupported: isRecognitionSupported
+    isRecognitionSupported: isRecognitionSupported,
+    scorePronunciation: scorePronunciation,
+    recognize: recognize
   };
 })();
