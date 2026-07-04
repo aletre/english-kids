@@ -93,7 +93,8 @@ EK.ui = (function () {
     });
 
     var buttons = el("div", { class: "ek-actions" }, [
-      el("button", { class: "ek-btn", onClick: function () { go("#study"); } }, ["Estudiar"]),
+      el("button", { class: "ek-btn", onClick: function () { go("#today"); } }, ["Estudiar hoy"]),
+      el("button", { class: "ek-btn ek-btn--blue", onClick: function () { go("#study"); } }, ["Estudiar"]),
       el("button", { class: "ek-btn ek-btn--blue", onClick: function () { go("#quiz"); } }, ["Examen"]),
       el("button", { class: "ek-btn ek-btn--blue", onClick: function () { go("#memory"); } }, ["Memoria"]),
       el("button", { class: "ek-btn ek-btn--blue", onClick: function () { go("#favorites"); } }, ["Favoritas"]),
@@ -442,6 +443,95 @@ EK.ui = (function () {
     ]));
   }
 
+  // ---- Estudiar hoy ----
+  var _todayChosen = null;
+
+  function renderTodayResult(r) {
+    var res = EK.today.result();
+    r.appendChild(el("div", { class: "ek-view" }, [
+      el("h1", { class: "ek-title", text: "Estudiar hoy" }),
+      el("div", { class: "ek-card ek-quiz__result" }, [
+        el("div", { class: "ek-quiz__score", text: "¡Bien hecho! 🎉" }),
+        el("div", { class: "ek-quiz__pct", text: "Aciertos: " + res.score + " / " + res.total + " · " + res.percent + "%" })
+      ]),
+      el("div", { class: "ek-actions" }, [
+        el("button", { class: "ek-btn", onClick: function () { _todayChosen = null; EK.today.start(); renderToday(); } }, ["Repetir"]),
+        el("button", { class: "ek-btn ek-btn--muted", onClick: function () { _todayChosen = null; go("#home"); } }, ["Inicio"])
+      ])
+    ]));
+  }
+
+  function renderToday() {
+    var ph = EK.today.phase();
+    var r = clear();
+    if (ph === "result") { renderTodayResult(r); return; }
+
+    var back = el("button", { class: "ek-back", onClick: function () { _todayChosen = null; go("#home"); } }, ["← Inicio"]);
+    var labels = { learn: "Aprender", review: "Repasar", quiz: "Mini examen" };
+    var head = el("div", { class: "ek-quiz__head" }, [
+      el("span", { class: "ek-nav__count", text: labels[ph] }),
+      el("span", { class: "ek-nav__count", text: (EK.today.index() + 1) + " / " + EK.today.total() })
+    ]);
+
+    if (ph === "learn" || ph === "review") {
+      var w = EK.today.current();
+      var card = el("div", { class: "ek-card ek-study" }, [
+        badgeEl(w, "ek-badge--lg"),
+        el("h1", { class: "ek-word-en", text: w.en }),
+        el("p", { class: "ek-word-es", text: w.es.join(" / ") }),
+        el("div", { class: "ek-study__controls" }, [
+          el("button", { class: "ek-icon-btn", "aria-label": "Pronunciar", onClick: function () { speakNormal(w.en); } }, ["🔊"]),
+          el("button", { class: "ek-icon-btn", "aria-label": "Pronunciación lenta", onClick: function () { EK.speech.speakSlow(w.en); } }, ["🐢"]),
+          el("button", { class: "ek-icon-btn", "aria-label": "Deletrear", onClick: function () { EK.speech.spell(w.en); } }, ["🔤"])
+        ])
+      ]);
+      var last = EK.today.index() >= EK.today.total() - 1;
+      var label = ph === "review" && last ? "Ir al examen" : "Siguiente";
+      var nextBtn = el("button", { class: "ek-btn ek-btn--blue", onClick: function () { EK.today.next(); renderToday(); } }, [label]);
+      r.appendChild(el("div", { class: "ek-view" }, [back, head, card, nextBtn]));
+      return;
+    }
+
+    // Fase quiz
+    var q = EK.today.current();
+    var isAnswered = EK.today.answered();
+    var options = el("div", { class: "ek-quiz__options" }, q.options.map(function (opt, idx) {
+      var cls = "ek-opt";
+      if (isAnswered) {
+        if (opt.correct) cls += " is-correct";
+        else if (_todayChosen === idx) cls += " is-wrong";
+      }
+      return el("button", {
+        class: cls,
+        onClick: function () {
+          if (EK.today.answered()) return;
+          _todayChosen = idx;
+          EK.today.answer(idx);
+          renderToday();
+        }
+      }, [opt.text]);
+    }));
+
+    var feedback = null;
+    if (isAnswered) {
+      var correct = !!(q.options[_todayChosen] && q.options[_todayChosen].correct);
+      feedback = el("div", { class: "ek-quiz__fb " + (correct ? "is-correct" : "is-wrong"),
+        text: correct ? "¡Correcto! 🎉" : ("Respuesta: " + q.word.es.join(" / ")) });
+    }
+
+    var nextBtn2 = isAnswered
+      ? el("button", { class: "ek-btn ek-btn--blue",
+          onClick: function () { _todayChosen = null; EK.today.next(); renderToday(); } },
+          [EK.today.index() >= EK.today.total() - 1 ? "Ver resultado" : "Siguiente"])
+      : null;
+
+    r.appendChild(el("div", { class: "ek-view" }, [
+      back, head,
+      el("div", { class: "ek-card ek-quiz" }, [el("h1", { class: "ek-word-en", text: q.prompt }), options, feedback]),
+      nextBtn2
+    ]));
+  }
+
   function render(route) {
     switch (route && route.view) {
       case "study": renderStudy(); break;
@@ -450,6 +540,7 @@ EK.ui = (function () {
       case "quiz": (route && route.seg) ? renderQuizQuestion() : renderQuizMenu(); break;
       case "memory": renderMemory(); break;
       case "achievements": renderAchievements(); break;
+      case "today": renderToday(); break;
       default: renderHome();
     }
   }
@@ -471,6 +562,7 @@ EK.ui = (function () {
     startMemory: startMemory,
     startMemoryTimer: startMemoryTimer,
     stopMemoryTimer: stopMemoryTimer,
-    renderAchievements: renderAchievements
+    renderAchievements: renderAchievements,
+    renderToday: renderToday
   };
 })();

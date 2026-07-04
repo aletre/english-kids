@@ -28,6 +28,8 @@ EK.app = (function () {
     } else if (r.view === "memory") {
       EK.ui.startMemory(); // arranca juego + temporizador + render
       return;
+    } else if (r.view === "today") {
+      EK.today.start();
     }
     EK.ui.render(r);
   }
