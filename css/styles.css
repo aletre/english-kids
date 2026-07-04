@@ -201,3 +201,24 @@ body {
 @media (min-width: 560px) {
   .ek-mem-board { grid-template-columns: repeat(4, 1fr); }
 }
+
+/* ===== Fase 6: gamificación ===== */
+.ek-gami {
+  display: flex; align-items: center; gap: 12px; width: 100%;
+  background: var(--surface); border: 2px solid var(--border); border-radius: var(--radius);
+  padding: 10px 14px; color: var(--text);
+}
+.ek-gami__level { font-weight: 800; white-space: nowrap; }
+.ek-gami__bar { flex: 1; height: 12px; background: var(--surface-2); border-radius: 999px; overflow: hidden; }
+.ek-gami__fill { height: 100%; width: 0%; background: var(--color-yellow); transition: width 0.3s ease; }
+.ek-gami__streak { font-weight: 800; white-space: nowrap; }
+.ek-ach-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.ek-ach {
+  display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center;
+  background: var(--surface); border: 2px solid var(--border); border-radius: var(--radius-lg);
+  padding: 18px 10px; opacity: 0.45; filter: grayscale(1); transition: opacity 0.2s ease, filter 0.2s ease;
+}
+.ek-ach.is-on { opacity: 1; filter: none; border-color: var(--color-green); }
+.ek-ach__emoji { font-size: 40px; line-height: 1; }
+.ek-ach__label { font-weight: 800; font-size: 14px; }
+@media (min-width: 560px) { .ek-ach-grid { grid-template-columns: repeat(3, 1fr); } }

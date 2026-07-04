@@ -48,6 +48,7 @@ EK.app = (function () {
   function init() {
     EK.storage.load();
     EK.settings.applyTheme(EK.settings.getTheme());
+    EK.gamification.recordToday(); // registra el día de hoy para la racha
     window.addEventListener("hashchange", route);
     document.addEventListener("keydown", onKeydown);
     document.documentElement.setAttribute("data-app", "ready");
