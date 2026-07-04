@@ -14,6 +14,7 @@ EK.app = (function () {
 
   function route() {
     var r = parseHash();
+    EK.ui.stopMemoryTimer(); // limpia el temporizador al navegar a cualquier vista
     if (r.view === "study") {
       if (r.id != null) {
         EK.study.start(EK.words, r.id);
@@ -24,6 +25,9 @@ EK.app = (function () {
     } else if (r.view === "quiz" && r.seg) {
       EK.quiz.start(r.seg);
       EK.ui.resetQuizFb();
+    } else if (r.view === "memory") {
+      EK.ui.startMemory(); // arranca juego + temporizador + render
+      return;
     }
     EK.ui.render(r);
   }

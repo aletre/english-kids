@@ -1,5 +1,5 @@
 // Service worker: precache del núcleo para funcionamiento offline.
-var CACHE = "english-kids-v4";
+var CACHE = "english-kids-v5";
 var CORE = [
   ".",
   "index.html",
@@ -12,6 +12,7 @@ var CORE = [
   "js/favorites.js",
   "js/study.js",
   "js/quiz.js",
+  "js/memory.js",
   "js/ui.js",
   "js/app.js",
   "manifest.webmanifest",

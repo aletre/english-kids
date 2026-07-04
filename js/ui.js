@@ -95,6 +95,7 @@ EK.ui = (function () {
     var buttons = el("div", { class: "ek-actions" }, [
       el("button", { class: "ek-btn", onClick: function () { go("#study"); } }, ["Estudiar"]),
       el("button", { class: "ek-btn ek-btn--blue", onClick: function () { go("#quiz"); } }, ["Examen"]),
+      el("button", { class: "ek-btn ek-btn--blue", onClick: function () { go("#memory"); } }, ["Memoria"]),
       el("button", { class: "ek-btn ek-btn--blue", onClick: function () { go("#favorites"); } }, ["Favoritas"]),
       el("button", { class: "ek-btn ek-btn--muted", onClick: function () { go("#settings"); } }, ["Configuración"])
     ]);
@@ -329,12 +330,94 @@ EK.ui = (function () {
     ]));
   }
 
+  // ---- Juego de memoria ----
+  var _memStart = 0, _memTimer = null, _memLocked = false, _memMismatchTO = null;
+
+  function memElapsed() {
+    return _memStart ? Math.floor((Date.now() - _memStart) / 1000) : 0;
+  }
+
+  function stopMemoryTimer() {
+    if (_memTimer) { clearInterval(_memTimer); _memTimer = null; }
+    if (_memMismatchTO) { clearTimeout(_memMismatchTO); _memMismatchTO = null; }
+    _memLocked = false;
+  }
+
+  function startMemoryTimer() {
+    stopMemoryTimer();
+    _memStart = Date.now();
+    _memLocked = false;
+    _memTimer = setInterval(function () {
+      var elt = document.getElementById("ek-mem-time");
+      if (elt) elt.textContent = memElapsed() + "s";
+    }, 1000);
+  }
+
+  function startMemory() {
+    EK.memory.start(6);
+    startMemoryTimer();
+    renderMemory();
+  }
+
+  function onMemFlip(i) {
+    if (_memLocked) return;
+    var res = EK.memory.flip(i);
+    if (res.status === "ignored") return;
+    renderMemory();
+    if (res.status === "mismatch") {
+      _memLocked = true;
+      _memMismatchTO = setTimeout(function () {
+        _memMismatchTO = null;
+        EK.memory.clearMismatch();
+        _memLocked = false;
+        renderMemory();
+      }, 900);
+    }
+  }
+
+  function renderMemory() {
+    var r = clear();
+    var back = el("button", { class: "ek-back", onClick: function () { go("#home"); } }, ["← Inicio"]);
+    var head = el("div", { class: "ek-quiz__head" }, [
+      el("span", { class: "ek-nav__count", text: "Movimientos: " + EK.memory.moves() }),
+      el("span", { class: "ek-nav__count", id: "ek-mem-time", text: memElapsed() + "s" })
+    ]);
+
+    var revealed = EK.memory.revealedIndices();
+    var board = el("div", { class: "ek-mem-board" }, EK.memory.cards().map(function (card, i) {
+      var up = EK.memory.isMatched(i) || revealed.indexOf(i) !== -1;
+      var cls = "ek-mem-card" + (up ? " is-up" : "") + (EK.memory.isMatched(i) ? " is-matched" : "");
+      return el("button", {
+        class: cls,
+        "aria-label": up ? card.text : "Carta oculta",
+        onClick: function () { onMemFlip(i); }
+      }, [up ? card.text : "?"]);
+    }));
+
+    var children = [back, head, board];
+
+    if (EK.memory.isDone()) {
+      stopMemoryTimer();
+      children.push(el("div", { class: "ek-card ek-quiz__result" }, [
+        el("div", { class: "ek-quiz__score", text: "¡Completado! 🎉" }),
+        el("div", { class: "ek-quiz__pct", text: "Movimientos: " + EK.memory.moves() + " · Tiempo: " + memElapsed() + "s" })
+      ]));
+      children.push(el("div", { class: "ek-actions" }, [
+        el("button", { class: "ek-btn", onClick: function () { startMemory(); } }, ["Reintentar"]),
+        el("button", { class: "ek-btn ek-btn--muted", onClick: function () { stopMemoryTimer(); go("#home"); } }, ["Inicio"])
+      ]));
+    }
+
+    r.appendChild(el("div", { class: "ek-view" }, children));
+  }
+
   function render(route) {
     switch (route && route.view) {
       case "study": renderStudy(); break;
       case "favorites": renderFavorites(); break;
       case "settings": renderSettings(); break;
       case "quiz": (route && route.seg) ? renderQuizQuestion() : renderQuizMenu(); break;
+      case "memory": renderMemory(); break;
       default: renderHome();
     }
   }
@@ -351,6 +434,10 @@ EK.ui = (function () {
     renderQuizMenu: renderQuizMenu,
     renderQuizQuestion: renderQuizQuestion,
     renderQuizResult: renderQuizResult,
-    resetQuizFb: function () { _quizFb = null; }
+    resetQuizFb: function () { _quizFb = null; },
+    renderMemory: renderMemory,
+    startMemory: startMemory,
+    startMemoryTimer: startMemoryTimer,
+    stopMemoryTimer: stopMemoryTimer
   };
 })();
