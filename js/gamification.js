@@ -7,10 +7,12 @@ EK.gamification = (function () {
   var XP_PER_WORD = 10;
   var XP_PER_LEVEL = 100;
 
-  function iso(d) { return d.toISOString().slice(0, 10); }
+  function pad(n) { return (n < 10 ? "0" : "") + n; }
+  function iso(d) { return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); }
   function today() { return iso(new Date()); }
   function prevDay(s) {
-    var d = new Date(s + "T00:00:00");
+    var p = s.split("-");
+    var d = new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
     d.setDate(d.getDate() - 1);
     return iso(d);
   }
