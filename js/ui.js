@@ -111,17 +111,23 @@ EK.ui = (function () {
     EK.speech.speak(text, { rate: EK.settings.rateFor(EK.settings.getSpeed()) });
   }
 
+  // Actualiza el texto de estado del micrófono (se re-lee por id para que
+  // funcione en cualquier vista y no quede huérfano si se re-renderiza).
+  function setMicStatus(text) {
+    var el0 = document.getElementById("ek-mic-status");
+    if (el0) el0.textContent = text;
+  }
+
   // Práctica de pronunciación: escucha al niño y compara con la palabra.
   function onSpeechPractice(w) {
-    var statusEl = document.getElementById("ek-mic-status");
-    if (statusEl) statusEl.textContent = "🎤 Escuchando…";
+    setMicStatus("🎤 Escuchando…");
     EK.speech.recognize({
       onResult: function (transcript) {
         var okp = EK.speech.scorePronunciation(w.en, transcript);
-        if (statusEl) statusEl.textContent = (okp ? "✅ ¡Muy bien! " : "❌ Escuché: ") + transcript;
+        setMicStatus((okp ? "✅ ¡Muy bien! " : "❌ Escuché: ") + transcript);
       },
       onError: function () {
-        if (statusEl) statusEl.textContent = "No te escuché, intenta de nuevo.";
+        setMicStatus("No te escuché, intenta de nuevo.");
       }
     });
   }
@@ -503,13 +509,19 @@ EK.ui = (function () {
         el("div", { class: "ek-study__controls" }, [
           el("button", { class: "ek-icon-btn", "aria-label": "Pronunciar", onClick: function () { speakNormal(w.en); } }, ["🔊"]),
           el("button", { class: "ek-icon-btn", "aria-label": "Pronunciación lenta", onClick: function () { EK.speech.speakSlow(w.en); } }, ["🐢"]),
-          el("button", { class: "ek-icon-btn", "aria-label": "Deletrear", onClick: function () { EK.speech.spell(w.en); } }, ["🔤"])
-        ])
+          el("button", { class: "ek-icon-btn", "aria-label": "Deletrear", onClick: function () { EK.speech.spell(w.en); } }, ["🔤"]),
+          EK.speech.isRecognitionSupported()
+            ? el("button", { class: "ek-icon-btn", "aria-label": "Pronuncia tú", onClick: function () { onSpeechPractice(w); } }, ["🎤"])
+            : null
+        ].filter(Boolean))
       ]);
       var last = EK.today.index() >= EK.today.total() - 1;
       var label = ph === "review" && last ? "Ir al examen" : "Siguiente";
       var nextBtn = el("button", { class: "ek-btn ek-btn--blue", onClick: function () { EK.today.next(); renderToday(); } }, [label]);
-      r.appendChild(el("div", { class: "ek-view" }, [back, head, card, nextBtn]));
+      var micStatus = EK.speech.isRecognitionSupported()
+        ? el("p", { class: "ek-mic-status", id: "ek-mic-status", text: "" })
+        : null;
+      r.appendChild(el("div", { class: "ek-view" }, [back, head, card, micStatus, nextBtn].filter(Boolean)));
       return;
     }
 
