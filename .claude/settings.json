@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node --check js/ui.js)",
+      "Bash(node --check service-worker.js)",
+      "Bash(node -e ' *)"
+    ]
+  }
+}
