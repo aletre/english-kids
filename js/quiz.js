@@ -4,7 +4,7 @@ window.EK = window.EK || {};
 EK.quiz = (function () {
   "use strict";
 
-  var MODES = ["choice", "write", "listen"];
+  var MODES = ["choice", "write", "listen", "spell"];
   var _rng = Math.random;
   var _session = null; // { mode, questions:[...], i, score, answered }
 
@@ -58,6 +58,8 @@ EK.quiz = (function () {
     var correct;
     if (q.mode === "write") {
       correct = EK.wordUtils.matchesAnswer(q.word, String(value));
+    } else if (q.mode === "spell") {
+      correct = EK.wordUtils.normalize(String(value)) === EK.wordUtils.normalize(q.word.en);
     } else {
       correct = !!(q.options[value] && q.options[value].correct);
     }

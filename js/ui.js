@@ -252,7 +252,8 @@ EK.ui = (function () {
       el("div", { class: "ek-actions" }, [
         el("button", { class: "ek-btn", onClick: function () { go("#quiz/choice"); } }, ["Opción múltiple"]),
         el("button", { class: "ek-btn ek-btn--blue", onClick: function () { go("#quiz/write"); } }, ["Escribir"]),
-        el("button", { class: "ek-btn ek-btn--muted", onClick: function () { go("#quiz/listen"); } }, ["Escuchar"])
+        el("button", { class: "ek-btn ek-btn--blue", onClick: function () { go("#quiz/listen"); } }, ["Escuchar"]),
+        el("button", { class: "ek-btn ek-btn--muted", onClick: function () { go("#quiz/spell"); } }, ["Spelling Bee"])
       ])
     ]));
   }
@@ -300,15 +301,24 @@ EK.ui = (function () {
         onClick: function () { speakNormal(q.word.en); }
       }, ["🔊"]);
       if (!answered) speakNormal(q.word.en); // reproducir al mostrar
+    } else if (q.mode === "spell") {
+      stimulus = el("div", { class: "ek-quiz__spell-cue" }, [
+        el("div", { class: "ek-study__controls" }, [
+          el("button", { class: "ek-icon-btn ek-quiz__play", "aria-label": "Escuchar de nuevo", onClick: function () { speakNormal(q.word.en); } }, ["🔊"]),
+          el("button", { class: "ek-icon-btn", "aria-label": "Escuchar lento", onClick: function () { EK.speech.speakSlow(q.word.en); } }, ["🐢"])
+        ]),
+        el("p", { class: "ek-word-es", text: q.word.es.join(" / ") })
+      ]);
+      if (!answered) speakNormal(q.word.en); // reproducir al mostrar
     } else {
       stimulus = el("h1", { class: "ek-word-en", text: q.prompt });
     }
 
     var body;
-    if (q.mode === "write") {
+    if (q.mode === "write" || q.mode === "spell") {
       var input = el("input", {
         class: "ek-search ek-quiz__input", type: "text", "aria-label": "Tu respuesta",
-        placeholder: "Escribe en español…", autocomplete: "off"
+        placeholder: q.mode === "spell" ? "Escribe la palabra en inglés…" : "Escribe en español…", autocomplete: "off"
       });
       if (answered) { input.value = ""; input.setAttribute("disabled", "disabled"); }
       var check = el("button", { class: "ek-btn", onClick: function () {
@@ -342,7 +352,8 @@ EK.ui = (function () {
 
     var feedback = null;
     if (answered) {
-      var okText = _quizFb.correct ? "¡Correcto! 🎉" : ("Respuesta: " + q.word.es.join(" / "));
+      var answerText = q.mode === "spell" ? q.word.en : q.word.es.join(" / ");
+      var okText = _quizFb.correct ? "¡Correcto! 🎉" : ("Respuesta: " + answerText);
       feedback = el("div", { class: "ek-quiz__fb " + (_quizFb.correct ? "is-correct" : "is-wrong"), text: okText });
     }
 
