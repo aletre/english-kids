@@ -76,4 +76,28 @@
     EKTest.assertEqual(res.percent, 50, "50%");
     EKTest.assertEqual(EK.storage.get("stats.bestQuiz"), 50, "bestQuiz = 50");
   });
+
+  EKTest.test("quiz spell: MODES incluye 'spell' y la pregunta no tiene opciones", function () {
+    EK.storage._backend = memBackend(); EK.storage.load();
+    EKTest.assert(EK.quiz.MODES.indexOf("spell") !== -1, "MODES incluye spell");
+    EK.quiz._setRng(function () { return 0; });
+    EK.quiz.start("spell", 4);
+    var q = EK.quiz.current();
+    EKTest.assert(!q.options, "la pregunta spell no lleva opciones");
+    EKTest.assert(typeof q.word.en === "string" && q.word.en.length > 0, "tiene word.en");
+  });
+
+  EKTest.test("quiz spell: valida el deletreo exacto en inglés", function () {
+    EK.storage._backend = memBackend(); EK.storage.load();
+    EK.quiz._setRng(function () { return 0; });
+    EK.quiz.start("spell", 4);
+    var q1 = EK.quiz.current();
+    EKTest.assert(EK.quiz.answer(q1.word.en.toUpperCase()).correct === true, "acepta mayúsculas (deletreo correcto)");
+    EK.quiz.next();
+    var q2 = EK.quiz.current();
+    EKTest.assert(EK.quiz.answer(q2.word.es[0]).correct === false, "rechaza la traducción en español");
+    EK.quiz.next();
+    var q3 = EK.quiz.current();
+    EKTest.assert(EK.quiz.answer("xxwrongxx").correct === false, "rechaza mal escrito");
+  });
 })();
